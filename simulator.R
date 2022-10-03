@@ -123,10 +123,15 @@ sim_dat <- function(n, d, n_fctr, r2, lin_pr, conf_pr, sp, method, pref) {
         x[, j] <- signal_x + sim_noise(signal_x, r2, n_tmp)
       }
     }
+    # Scramble variances
+    x <- scale(x, center = FALSE)
+    s2 <- 10 / rchisq(d, df = 10)
+    x <- foreach(j = 1:d, .combine = cbind) %do% {x[, j] * sqrt(s2[j])}
+    # Export
     out <- data.table(x)[, 'sigma' := sigma]
     return(out)
   }
-  out <- foreach(s = 0:d, .combine = rbind) %dorng% dag_loop(s)
+  out <- foreach(s = 0:(d - 1), .combine = rbind) %dorng% dag_loop(s)
   # Export
   params <- list(
     'n' = n, 'd' = d, 'n_fctr' = n_fctr, 
@@ -139,7 +144,9 @@ sim_dat <- function(n, d, n_fctr, r2, lin_pr, conf_pr, sp, method, pref) {
 }
 
 
-
+# Idea: standardize DGP so we don't get variance explosion
+# Stick with zero confounders in the first instance
+# 
 
 
 
